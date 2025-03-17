@@ -5405,4 +5405,13 @@ if __name__ == "__main__":
     sanitize_carriers(n, snakemake.config)
     sanitize_locations(n)
 
+    csv_folder_path = snakemake.output[0].replace(".nc", "")
+    n.export_to_csv_folder(csv_folder_path)
+    subfolder_path = csv_folder_path + '/default_data'
+    if not os.path.exists(subfolder_path):
+        os.makedirs(subfolder_path)
+    for key, df in n.component_attrs.items():
+        file_path = os.path.join(subfolder_path, f'{key.lower()}.csv')
+        df.to_csv(file_path)
+        
     n.export_to_netcdf(snakemake.output[0])

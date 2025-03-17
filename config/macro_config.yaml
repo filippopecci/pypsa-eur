@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: : 2017-2024 The PyPSA-Eur Authors
+#
+# SPDX-License-Identifier: CC0-1.0
+
+
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#run
+run:
+
+  name: "macro_n39_y2050"
+  scenarios:
+    enable: false
+    file: config/macro_scenarios.yaml
+  disable_progressbar: false
+  shared_resources:
+    policy: false
+    exclude: []
+  shared_cutouts: true
+
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#foresight
+foresight: overnight # options: myopic, perfect
+
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#scenario
+# Wildcard docs in https://pypsa-eur.readthedocs.io/en/latest/wildcards.html
+scenario:
+  clusters:
+  - 39
+  sector_opts:
+  - ''
+  planning_horizons:
+  #- 2020
+  #- 2030
+  #- 2040
+  - 2050
+
+### The below requires modifying prepare_sector_network.py as done by ADB
+### co2_budget_apply: true
+
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#sector
+sector:
+  H2_network: true #default is true
+  transport: true #default is true
+  heating: true #default is true
+  biomass: true #default is true
+  industry: true #default is true
+  agriculture: true #default is true
+  fossil_fuels: true #default is true
+  v2g: false #default is true
+  bev_dsm: false #default is true
+    
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#clustering
+clustering:
+  temporal:
+    resolution_sector: 2920h

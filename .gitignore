@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 master
-
+.DS_Store
 .snakemake*
 .ipynb_checkpoints
 __pycache__
@@ -29,7 +29,7 @@ doc/_build
 /scripts/old
 /scripts/create_scenarios.py
 /config/create_scenarios.py
-
+/config/adb_industry_configs/
 config/config.yaml
 config/scenarios.yaml
 
