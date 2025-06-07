@@ -75,3 +75,4 @@ merger-todos.md
 *.html
 # private dev folder
 dev/*
+.DS_Store
