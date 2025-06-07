@@ -4,6 +4,7 @@
 
 master
 
+.DS_Store
 .snakemake*
 .ipynb_checkpoints
 __pycache__
@@ -75,4 +76,3 @@ merger-todos.md
 *.html
 # private dev folder
 dev/*
-.DS_Store
