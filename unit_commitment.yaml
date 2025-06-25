@@ -1,0 +1,208 @@
+### TODO: Should apply inflation rate to startup costs so that they consistent with the rest of the costs 
+### Assume 2013 as currency year for Schill et al. (2017)
+### Assume 2023 as currency year for EERA 2024
+
+### Assumptions:
+### Gas and Oil power plants are assumed to carry out cold starts
+### Coal and lignite power plants are assumed to carry out warm starts
+### Nuclear power plants are assumed to carry out warm starts
+
+### The sources for PowerGenome numbers are:
+### - misc_gen_inputs.csv input file in PowerGenome
+### - startup_costs.yml setting fil in PowerGenome:https://github.com/PowerGenome/PowerGenome/blob/master/example_systems/CONUS-3-zone/settings/startup_costs.yml
+### - Startup fuel consumptions in PowerGenome are taken from:
+###   D. Lew, G. Brinkman, N. Kumar, S. Lefton, G. Jordan and S. Venkataraman, "Finding Flexibility: Cycling the Conventional Fleet," in IEEE Power and Energy Magazine, vol. 11, no. 6, pp. 20-32, Nov.-Dec. 2013, 
+###   https://doi.org/10.1109/MPE.2013.2277988.
+
+### The sources for PyPSA-Eur numbers are:
+### - unit_commitment.csv input file in PyPSA-Eur
+### - Table 3 in the supplementary materia of the paper:
+###   Schill, WP., Pahle, M. & Gambardella, C. Start-up costs of thermal power plants in markets with increasing shares of variable renewable generation. Nat Energy 2, 17050 (2017). 
+###   https://doi.org/10.1038/nenergy.2017.50
+
+### Source for ERAA 2024 (https://www.entsoe.eu/eraa/2024/) numbers are:,
+### - Input data downloaded from here: https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/sdc-documents/ERAA/ERAA_2024/Common%20data.zip
+### - Annex 1 on Inputs and Assumptions: https://eepublicdownloads.blob.core.windows.net/public-cdn-container/clean-documents/sdc-documents/ERAA/2024/report/ERAA_2024_Annex_1_Assumptions.pdf
+
+### Combined Cycle Gas Turbine, naturalgas_ccavgcf in file misc_gen_inputs.csv in PowerGenome
+### Using values for CCGT present 2 in the EERA 2024 input data
+ccgt: 
+  min_down_time: 
+    powergenome: 6
+    pypsa: 2
+    eera: 2 
+  min_up_time:
+    powergenome: 6
+    pypsa: 3
+    eera: 2  
+  min_flow_fraction: 
+    powergenome: 0.2
+    pypsa: 0.45
+    eera: 0.40
+  ramp_up_fraction: 
+    powergenome: 0.64
+    pypsa: 1.0
+    eera:  1.0
+  ramp_down_fraction: 
+    powergenome: 0.64
+    pypsa: 1.0
+    eera: 1.0
+  startup_cost:
+    powergenome: 
+    pypsa: 60 ### cold start
+    eera: 36 ### cold start
+  startup_fuel_consumption: 
+    powergenome: 0.58614214 ### does not specify if warm, hot or cold star
+    pypsa: 2.8 ### cold start
+    eera: 2.6944466 ### cold start
+### Open Cycle Gas Turbine, naturalgas_ctavgcf in file misc_gen_inputs.csv in PowerGenome
+### Using values for OCGT new in the EERA 2024 input data
+ocgt: 
+  min_down_time: 
+    powergenome: 1
+    pypsa: 1
+    eera: 1
+  min_up_time:
+    powergenome: 1
+    pypsa: 1
+    eera: 1  
+  min_flow_fraction: 
+    powergenome: 0.3
+    pypsa: 0.2
+    eera: 0.4
+  ramp_up_fraction: 
+    powergenome: 1.0
+    pypsa: 1.0
+    eera: 1.0 
+  ramp_down_fraction: 
+    powergenome: 1.0
+    pypsa: 1.0
+    eera: 1.0
+  startup_cost:
+    powergenome:
+    pypsa: 24.0 ### cold start
+    eera: 24.0 ### cold start
+  startup_fuel_consumption: 
+    powergenome: 1.025748745 ### does not specify if warm, hot or cold star
+    pypsa: 0.1 ### cold start
+    eera: 0.0833334 ### cold start  
+### For PowerGenome, use the same a conventional steam coal generator
+### Using values for Lignite old 1 in the EERA 2024 input data 
+lignite:  
+  min_down_time: 
+    powergenome: 24
+    pypsa: 6
+    eera: 11
+  min_up_time:
+    powergenome: 24
+    pypsa: 7
+    eera: 11  
+  min_flow_fraction: 
+    powergenome: 0.383 ### conventional_steam_coal_1 from https://doi.org/10.1016/j.ijggc.2022.103686
+    pypsa: 0.4
+    eera: 0.5
+  ramp_up_fraction: 
+    powergenome: 0.57
+    pypsa: 1.0
+    eera:  1.0
+  ramp_down_fraction: 
+    powergenome: 0.57
+    pypsa: 1.0
+    eera: 1.0
+  startup_cost:
+    powergenome:
+    pypsa: 24.5 ### warm start, 50% of the cost reported in Table 3 of the SI of Schill et al. (2017) for plants larger than 500MW (see first paragraph on pag.9 of the SI)
+    eera: 70.0 ### warm star
+  startup_fuel_consumption: 
+    powergenome: 4.835672655 ### same as coal
+    pypsa: 2.95 ### warm start, 50% of the value reported in Table 3 of the SI of Schill et al. (2017) for plants larger than 500MW (see first paragraph on pag.9 of the SI)
+    eera: 5.0 ### warm start  
+### Using values for Coal old 1 in the EERA 2024 input data 
+coal:
+  min_down_time: 
+    powergenome: 24
+    pypsa: 6
+    eera: 8
+  min_up_time:
+    powergenome: 24
+    pypsa: 5
+    eera: 8   
+  min_flow_fraction: 
+    powergenome: 0.383 ### conventional_steam_coal_1 from https://doi.org/10.1016/j.ijggc.2022.103686
+    pypsa: 0.38
+    eera: 0.4
+  ramp_up_fraction: 
+    powergenome: 0.57
+    pypsa: 1.0
+    eera: 1.0
+  ramp_down_fraction: 
+    powergenome: 0.57
+    pypsa: 1.0
+    eera: 1.0
+  startup_cost:
+    powergenome:
+    pypsa: 24.5 ### warm start, 50% of the cost reported in Table 3 of the SI of Schill et al. (2017) for plants larger than 500MW (see first paragraph on pag.9 of the SI)
+    eera: 70.00 ### warm start, or 94.0 cold start 
+  startup_fuel_consumption: 
+    powergenome: 4.835672655 ### does not specify if warm, hot or cold start
+    pypsa: 2.95 ### warm start, 50% of the value reported in Table 3 of the SI of Schill et al. (2017) for plants larger than 500MW (see first paragraph on pag.9 of the SI)
+    eera: 5.0 ### warm start  
+### Using values for heavy oil old 1 in the EERA 2024 input data
+oil:
+  min_down_time: 
+    powergenome: 1
+    pypsa: 2
+    eera: 3
+  min_up_time:
+    powergenome: 1
+    pypsa: 2
+    eera: 3  
+  min_flow_fraction: 
+    powergenome: 0.0
+    pypsa: 0.38
+    eera: 0.5
+  ramp_up_fraction: 
+    powergenome: 1.0
+    pypsa: 1.0
+    eera: 1.0 
+  ramp_down_fraction:
+    powergenome: 1.0
+    pypsa: 1.0
+    eera: 1.0
+  startup_cost:
+    powergenome:
+    pypsa: 57 ### cold start
+    eera: 70 ### cold start
+  startup_fuel_consumption: 
+    powergenome: 
+    pypsa:  2.8 ### cold start
+    eera: 2.1111128 ### cold start
+nuclear:
+  min_down_time: 
+    powergenome: 24
+    pypsa: 10
+    eera: 12
+  min_up_time:
+    powergenome: 24
+    pypsa: 6
+    eera: 12   
+  min_flow_fraction: 
+    powergenome: 0.5 ### nuclear from https://doi.org/10.1016/j.ijggc.2022.103686
+    pypsa: 0.5
+    eera: 0.4
+  ramp_up_fraction: 
+    powergenome: 0.3
+    pypsa: 0.3
+    eera: 1.0 
+  ramp_down_fraction: 
+    powergenome: 0.3
+    pypsa: 0.3
+    eera: 1.0
+  startup_cost:
+    powergenome:
+    pypsa: 16.666666666666668 ### hot start, 30% of the value reported in Table 3 of the SI of Schill et al. (2017) (see first paragraph on pag.9 of the SI)
+    eera: 21 ### warm start
+  startup_fuel_consumption: 
+    powergenome: 
+    pypsa: 5.566666666666666 ### hot start, 30% of the value reported in Table 3 of the SI of Schill et al. (2017) (see first paragraph on pag.9 of the SI)
+    eera: 3.888892 ### warm start, they do not provide values for hot and cold starts
