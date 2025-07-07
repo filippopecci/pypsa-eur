@@ -410,6 +410,10 @@ def load_and_aggregate_powerplants(
         + " "
         + disaggregated.index.astype(str)
     )
+    
+    group_sizes = df.groupby(grouper).size().reset_index(name="num_units")
+    aggregated = aggregated.merge(group_sizes, on=grouper)
+    disaggregated["num_units"] = 1
 
     return pd.concat([aggregated, disaggregated])
 
@@ -690,6 +694,7 @@ def attach_conventional_generators(
         capital_cost=ppl.capital_cost,
         build_year=ppl.build_year,
         lifetime=ppl.lifetime,
+        num_units = ppl.num_units,
         **committable_attrs,
     )
 
@@ -791,6 +796,7 @@ def attach_hydro(
                 .divide(ror["p_nom"], axis=1)
                 .where(lambda df: df <= 1.0, other=1.0)
             ),
+            num_units=ror["num_units"],
         )
 
     if "PHS" in carriers and not phs.empty:
@@ -809,6 +815,7 @@ def attach_hydro(
             efficiency_store=np.sqrt(costs.at["PHS", "efficiency"]),
             efficiency_dispatch=np.sqrt(costs.at["PHS", "efficiency"]),
             cyclic_state_of_charge=True,
+            num_units = phs["num_units"],
         )
 
     if "hydro" in carriers and not hydro.empty:
@@ -879,6 +886,7 @@ def attach_hydro(
             efficiency_store=0.0,
             cyclic_state_of_charge=True,
             inflow=inflow_t.loc[:, hydro.index],
+            num_units=hydro["num_units"],
         )
 
 
