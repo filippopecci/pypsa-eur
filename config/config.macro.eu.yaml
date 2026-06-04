@@ -1,0 +1,75 @@
+run:
+  name: "pypsa-macro-eu-nuts0"
+
+scenario:
+  clusters:
+  - "adm"
+  planning_horizons:
+  - 2025
+  - 2030
+  - 2035
+  - 2040
+  - 2045
+  - 2050
+
+foresight: myopic
+
+countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
+
+clustering:
+  mode: administrative
+  administrative:
+    level: 0
+  build_bidding_zones:
+    remove_islands: true
+    aggregate_to_tyndp: true
+  temporal:
+    resolution_elec: false
+    resolution_sector: false
+  
+conventional:
+  dynamic_fuel_price: true
+  unit_commitment: false
+
+transmission_projects:
+  enable: false
+
+renewable:
+  onwind:
+    resource_classes: 1
+  offwind:
+    resource_classes: 1
+  offwind-ac:
+    resource_classes: 1
+  offwind-dc:
+    resource_classes: 1
+  offwind-float:
+    resource_classes: 1
+  solar:
+    resource_classes: 1
+  "solar-hsat":
+    resource_classes: 1
+
+sector:
+  electricity_distribution_grid: false # true   #####
+  gas_distribution_grid: false # true   #####
+
+atlite:
+  nprocesses: 8
+
+solving:
+  solver:
+    name: highs
+    options: highs-default
+  options:
+    linearized_unit_commitment: true  
+  solver_options:
+    gurobi-default:
+      threads: 32
+      method: 2 # barrier
+      crossover: 0
+      BarConvTol: 1.e-3
+    highs-default:
+      solver: "ipm"
+      run_crossover: "off"
+      ipm_optimality_tolerance: 1e-3

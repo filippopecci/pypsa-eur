@@ -1,0 +1,112 @@
+run:
+  name: "pypsa-macro-eu-bz-yrs"
+
+scenario:
+  clusters:
+  - "adm"
+  planning_horizons:
+  - 2025
+  - 2030
+  - 2035
+  - 2040
+  - 2045
+  - 2050
+
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#snapshots
+snapshots:
+  start: "1995-01-01"
+  end: "2026-01-01"
+  inclusive: left
+
+atlite:
+  nprocesses: 8
+  default_cutout: 
+  - "europe-1995-sarah3-era5"
+  - "europe-1996-sarah3-era5"
+  - "europe-1997-sarah3-era5"
+  - "europe-1998-sarah3-era5"
+  - "europe-1999-sarah3-era5"
+  - "europe-2000-sarah3-era5"
+  - "europe-2001-sarah3-era5"
+  - "europe-2002-sarah3-era5"
+  - "europe-2003-sarah3-era5"
+  - "europe-2004-sarah3-era5"
+  - "europe-2005-sarah3-era5"
+  - "europe-2006-sarah3-era5"
+  - "europe-2007-sarah3-era5"
+  - "europe-2008-sarah3-era5"
+  - "europe-2009-sarah3-era5"
+  - "europe-2010-sarah3-era5"
+  - "europe-2011-sarah3-era5"
+  - "europe-2012-sarah3-era5"
+  - "europe-2013-sarah3-era5"
+  - "europe-2014-sarah3-era5"
+  - "europe-2015-sarah3-era5"
+  - "europe-2016-sarah3-era5"
+  - "europe-2017-sarah3-era5"
+  - "europe-2018-sarah3-era5"
+  - "europe-2019-sarah3-era5"
+  - "europe-2020-sarah3-era5"
+  - "europe-2021-sarah3-era5"
+  - "europe-2022-sarah3-era5"
+  - "europe-2023-sarah3-era5"
+  - "europe-2024-sarah3-era5"
+  - "europe-2025-sarah3-era5"
+foresight: myopic
+
+countries: ['AL', 'AT', 'BA', 'BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK', 'XK']
+
+clustering:
+  mode: administrative
+  administrative:
+    level: bz
+  build_bidding_zones:
+    remove_islands: true
+    aggregate_to_tyndp: true
+  temporal:
+    resolution_elec: false
+    resolution_sector: false
+  
+conventional:
+  dynamic_fuel_price: true
+  unit_commitment: false
+
+transmission_projects:
+  enable: false
+
+renewable:
+  onwind:
+    resource_classes: 1
+  offwind:
+    resource_classes: 1
+  offwind-ac:
+    resource_classes: 1
+  offwind-dc:
+    resource_classes: 1
+  offwind-float:
+    resource_classes: 1
+  solar:
+    resource_classes: 1
+  "solar-hsat":
+    resource_classes: 1
+
+sector:
+  electricity_distribution_grid: false # true   #####
+  gas_distribution_grid: false # true   #####
+
+solving:
+  solver:
+    name: highs
+    options: highs-default
+  options:
+    linearized_unit_commitment: true  
+  solver_options:
+    gurobi-default:
+      threads: 32
+      method: 2 # barrier
+      crossover: 0
+      BarConvTol: 1.e-3
+    highs-default:
+      solver: "ipm"
+      run_crossover: "off"
+      ipm_optimality_tolerance: 1e-3

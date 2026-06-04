@@ -7,3 +7,6 @@ pinning-strategy = "latest-up"
 # This aligns with default `conda` behaviour.
 # Set to "false" to stop post-link scripts from running.
 run-post-link-scripts = "insecure"
+
+[cache]
+repodata = "/work/cmcc/fp01525/.cache/pixi/repodata"
