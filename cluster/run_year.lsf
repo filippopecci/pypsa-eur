@@ -63,7 +63,7 @@ done
 pixi run snakemake --cores 16 \
     --rerun-incomplete --keep-going --retries 1 \
     --configfile config/config.macro.italy.yaml \
-    "${TARGETS[@]}"
+    -- "${TARGETS[@]}"
 
 date
 echo "=== year $YR complete ==="
