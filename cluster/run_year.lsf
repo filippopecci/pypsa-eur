@@ -1,0 +1,70 @@
+#!/bin/bash
+# Build the 7 pre-optimization networks (6 horizons + brownfield baseline)
+# for ONE weather year. Year is passed in via the YR env var:
+#   bsub -J "pypsa-yr2013" -env "YR=2013" < cluster/run_year.lsf
+#
+# Outputs land in:
+#   resources/pypsa-macro-italy/yr${YR}/networks/base_s_adm___<horizon>.nc
+
+#BSUB -J pypsa-yr
+#BSUB -q p_macro
+#BSUB -P 0588
+#BSUB -n 16
+#BSUB -R "span[ptile=16]"
+#BSUB -R "rusage[mem=500G]"
+#BSUB -W 1440
+#BSUB -x
+#BSUB -o log_yr_%J.out
+#BSUB -e log_yr_%J.err
+
+set -euo pipefail
+
+if [[ -z "${YR:-}" ]]; then
+    echo "FATAL: YR env var not set. Use: bsub -env \"YR=2013\" < run_year.lsf"
+    exit 2
+fi
+if ! [[ "$YR" =~ ^(19[0-9]{2}|20[0-2][0-9])$ ]]; then
+    echo "FATAL: YR=$YR does not look like a 4-digit year in 1995..2025."
+    exit 2
+fi
+
+# --- env (don't rely on .bashrc being sourced) ---
+export PATH="/users_home/cmcc/fp01525/.pixi/bin:$PATH"
+export TMPDIR=/work/cmcc/fp01525/tmp
+mkdir -p "$TMPDIR"
+export PIXI_CACHE_DIR=/work/cmcc/fp01525/.cache/pixi
+export XDG_CACHE_HOME=/work/cmcc/fp01525/.cache
+
+cd /work/cmcc/fp01525/pypsa-eur
+
+# --- breadcrumbs ---
+echo "=== job $LSB_JOBID  host $(hostname)  year=$YR ==="
+date
+env | grep -E 'YR|TMPDIR|CACHE|PATH|LSB_' | sort
+which pixi snakemake || true
+df -h "$TMPDIR" "$PIXI_CACHE_DIR" /work/cmcc/fp01525 || true
+
+# Sanity: the cutout we need must already exist (built by build_cutouts.lsf).
+CUTOUT="data/cutout/build/unknown/europe-${YR}-sarah3-era5.nc"
+if [[ ! -s "$CUTOUT" ]]; then
+    echo "FATAL: $CUTOUT not found. Run prefetch_archives.lsf + build_cutouts.lsf first."
+    exit 3
+fi
+echo "[ok] cutout present: $(du -h "$CUTOUT" | cut -f1)"
+
+# --- run ---
+TARGETS=(
+    "resources/pypsa-macro-italy/yr${YR}/networks/base_s_adm___2025_brownfield.nc"
+)
+for h in 2025 2030 2035 2040 2045 2050; do
+    TARGETS+=("resources/pypsa-macro-italy/yr${YR}/networks/base_s_adm___${h}.nc")
+done
+
+pixi run snakemake --cores 16 \
+    --rerun-incomplete --keep-going --retries 1 \
+    --configfile config/config.macro.italy.yaml \
+    "${TARGETS[@]}"
+
+date
+echo "=== year $YR complete ==="
+ls -lh "resources/pypsa-macro-italy/yr${YR}/networks/" || true

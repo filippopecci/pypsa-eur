@@ -1,0 +1,60 @@
+#!/bin/bash
+# Download the 14 prebuilt cutouts from data.pypsa.org directly into the
+# build/ path that snakemake will look at. Snakemake will then skip
+# build_cutout for these years and only actually run atlite+CDS for the
+# 17 missing years.
+#
+# Years prebuilt at data.pypsa.org/workflows/cutout/v1.0/ as of 2026-06:
+#   1995, 1996, 2008, 2009, 2010, 2012, 2013, 2019, 2020, 2021, 2022, 2023, 2024, 2025
+# Missing (must build from CDS):
+#   1997..2007, 2011, 2014..2018
+#
+# Queue choice: s_download is doctrinally the right queue for downloads
+# (n180 is optimised for this) but it is single-core and limits to 6 jobs
+# per user, so we run one s_download job that fetches sequentially. ~700 GB
+# total at ~100 MB/s ≈ 2 h; raise -W if your network is slower.
+
+#BSUB -J pypsa-prefetch
+#BSUB -q s_download
+#BSUB -P 0588
+#BSUB -n 1
+#BSUB -W 1440
+#BSUB -o log_prefetch_%J.out
+#BSUB -e log_prefetch_%J.err
+
+set -euo pipefail
+
+export PATH="/users_home/cmcc/fp01525/.pixi/bin:$PATH"
+export TMPDIR=/work/cmcc/fp01525/tmp
+mkdir -p "$TMPDIR"
+
+cd /work/cmcc/fp01525/pypsa-eur
+
+DEST=data/cutout/build/unknown
+mkdir -p "$DEST"
+
+BASE_URL=https://data.pypsa.org/workflows/cutout/v1.0
+PREBUILT_YEARS=(1995 1996 2008 2009 2010 2012 2013 2019 2020 2021 2022 2023 2024 2025)
+
+echo "=== job $LSB_JOBID  host $(hostname) ==="
+date
+df -h "$DEST" /work/cmcc/fp01525 || true
+
+for y in "${PREBUILT_YEARS[@]}"; do
+    fname="europe-${y}-sarah3-era5.nc"
+    out="$DEST/$fname"
+    if [[ -s "$out" ]]; then
+        echo "[skip] $fname already present ($(du -h "$out" | cut -f1))"
+        continue
+    fi
+    url="$BASE_URL/$fname"
+    echo "[fetch] $url"
+    # --fail: error out on HTTP errors; -C - : resume if partially downloaded
+    curl --fail --silent --show-error -L -C - -o "$out.part" "$url"
+    mv "$out.part" "$out"
+    echo "[done] $fname -> $(du -h "$out" | cut -f1)"
+done
+
+date
+echo "=== prefetch complete ==="
+du -sh "$DEST"

@@ -1,0 +1,267 @@
+# Scenarios for pypsa-macro-italy: one per weather year 1995..2025.
+# Each scenario overrides `snapshots` and `atlite.default_cutout`; everything
+# else (countries, clustering, planning_horizons, solving, etc.) is inherited
+# from config/config.macro.italy.yaml.
+#
+# Regenerate with:
+#   python -c "
+#   years = range(1995, 2026)
+#   with open('config/scenarios.macro.italy.yaml', 'w') as f:
+#       for y in years:
+#           f.write(f'''yr{y}:
+#     snapshots:
+#       start: \"{y}-01-01\"
+#       end: \"{y+1}-01-01\"
+#       inclusive: left
+#     atlite:
+#       default_cutout: \"europe-{y}-sarah3-era5\"
+#   ''')
+#   "
+
+yr1995:
+  snapshots:
+    start: "1995-01-01"
+    end: "1996-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-1995-sarah3-era5"
+
+yr1996:
+  snapshots:
+    start: "1996-01-01"
+    end: "1997-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-1996-sarah3-era5"
+
+yr1997:
+  snapshots:
+    start: "1997-01-01"
+    end: "1998-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-1997-sarah3-era5"
+
+yr1998:
+  snapshots:
+    start: "1998-01-01"
+    end: "1999-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-1998-sarah3-era5"
+
+yr1999:
+  snapshots:
+    start: "1999-01-01"
+    end: "2000-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-1999-sarah3-era5"
+
+yr2000:
+  snapshots:
+    start: "2000-01-01"
+    end: "2001-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2000-sarah3-era5"
+
+yr2001:
+  snapshots:
+    start: "2001-01-01"
+    end: "2002-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2001-sarah3-era5"
+
+yr2002:
+  snapshots:
+    start: "2002-01-01"
+    end: "2003-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2002-sarah3-era5"
+
+yr2003:
+  snapshots:
+    start: "2003-01-01"
+    end: "2004-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2003-sarah3-era5"
+
+yr2004:
+  snapshots:
+    start: "2004-01-01"
+    end: "2005-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2004-sarah3-era5"
+
+yr2005:
+  snapshots:
+    start: "2005-01-01"
+    end: "2006-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2005-sarah3-era5"
+
+yr2006:
+  snapshots:
+    start: "2006-01-01"
+    end: "2007-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2006-sarah3-era5"
+
+yr2007:
+  snapshots:
+    start: "2007-01-01"
+    end: "2008-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2007-sarah3-era5"
+
+yr2008:
+  snapshots:
+    start: "2008-01-01"
+    end: "2009-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2008-sarah3-era5"
+
+yr2009:
+  snapshots:
+    start: "2009-01-01"
+    end: "2010-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2009-sarah3-era5"
+
+yr2010:
+  snapshots:
+    start: "2010-01-01"
+    end: "2011-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2010-sarah3-era5"
+
+yr2011:
+  snapshots:
+    start: "2011-01-01"
+    end: "2012-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2011-sarah3-era5"
+
+yr2012:
+  snapshots:
+    start: "2012-01-01"
+    end: "2013-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2012-sarah3-era5"
+
+yr2013:
+  snapshots:
+    start: "2013-01-01"
+    end: "2014-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2013-sarah3-era5"
+
+yr2014:
+  snapshots:
+    start: "2014-01-01"
+    end: "2015-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2014-sarah3-era5"
+
+yr2015:
+  snapshots:
+    start: "2015-01-01"
+    end: "2016-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2015-sarah3-era5"
+
+yr2016:
+  snapshots:
+    start: "2016-01-01"
+    end: "2017-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2016-sarah3-era5"
+
+yr2017:
+  snapshots:
+    start: "2017-01-01"
+    end: "2018-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2017-sarah3-era5"
+
+yr2018:
+  snapshots:
+    start: "2018-01-01"
+    end: "2019-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2018-sarah3-era5"
+
+yr2019:
+  snapshots:
+    start: "2019-01-01"
+    end: "2020-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2019-sarah3-era5"
+
+yr2020:
+  snapshots:
+    start: "2020-01-01"
+    end: "2021-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2020-sarah3-era5"
+
+yr2021:
+  snapshots:
+    start: "2021-01-01"
+    end: "2022-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2021-sarah3-era5"
+
+yr2022:
+  snapshots:
+    start: "2022-01-01"
+    end: "2023-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2022-sarah3-era5"
+
+yr2023:
+  snapshots:
+    start: "2023-01-01"
+    end: "2024-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2023-sarah3-era5"
+
+yr2024:
+  snapshots:
+    start: "2024-01-01"
+    end: "2025-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2024-sarah3-era5"
+
+yr2025:
+  snapshots:
+    start: "2025-01-01"
+    end: "2026-01-01"
+    inclusive: left
+  atlite:
+    default_cutout: "europe-2025-sarah3-era5"

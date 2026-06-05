@@ -199,7 +199,7 @@ if CUTOUT_DATASET["source"] in ["build"]:
         params:
             cutouts=config_provider("atlite", "cutouts"),
         output:
-            cutout=CUTOUT_DATASET["folder"] / "{cutout}.nc",
+            cutout=CUTOUT_DATASET["folder"] + "/{cutout}.nc",
         log:
             "logs/build_cutout/{cutout}.log",
         benchmark:
@@ -436,7 +436,7 @@ if COUNTRY_RUNOFF_DATASET["source"] == "build":
             cutouts=["cutouts/europe-1940-2024-era5.nc"],
             country_shapes=resources("country_shapes.geojson"),
         output:
-            era5_runoff=COUNTRY_RUNOFF_DATASET["folder"] / "era5-runoff-per-country.csv",
+            era5_runoff=COUNTRY_RUNOFF_DATASET["folder"] + "/era5-runoff-per-country.csv",
         log:
             logs("build_country_runoff.log"),
         benchmark:

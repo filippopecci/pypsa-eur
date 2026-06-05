@@ -1366,9 +1366,9 @@ if MOBILITY_PROFILES_DATASET["source"] in ["build"]:
                 ),
             ),
         output:
-            raw_files=directory(MOBILITY_PROFILES_DATASET["folder"] / "raw"),
-            kfz=MOBILITY_PROFILES_DATASET["folder"] / "kfz.csv",
-            pkw=MOBILITY_PROFILES_DATASET["folder"] / "pkw.csv",
+            raw_files=directory(MOBILITY_PROFILES_DATASET["folder"] + "/raw"),
+            kfz=MOBILITY_PROFILES_DATASET["folder"] + "/kfz.csv",
+            pkw=MOBILITY_PROFILES_DATASET["folder"] + "/pkw.csv",
         threads: 1
         resources:
             mem_mb=5000,

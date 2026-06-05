@@ -1,0 +1,54 @@
+#!/bin/bash
+# Build all 31 cutouts via snakemake. Files already present (from
+# prefetch_archives.lsf) are skipped; only the 17 missing years actually
+# call atlite + CDS.
+#
+# Run this AFTER prefetch_archives.lsf finishes. Submit with:
+#   bsub -w "done(<prefetch-job-id>)" < cluster/build_cutouts.lsf
+# or just run them sequentially yourself.
+
+#BSUB -J pypsa-cutouts
+#BSUB -q p_macro
+#BSUB -P 0588
+#BSUB -n 16
+#BSUB -R "span[ptile=16]"
+#BSUB -R "rusage[mem=200G]"
+#BSUB -W 1440
+#BSUB -x
+#BSUB -o log_cutouts_%J.out
+#BSUB -e log_cutouts_%J.err
+
+set -euo pipefail
+
+# --- env (don't rely on .bashrc being sourced) ---
+export PATH="/users_home/cmcc/fp01525/.pixi/bin:$PATH"
+export TMPDIR=/work/cmcc/fp01525/tmp
+mkdir -p "$TMPDIR" /work/cmcc/fp01525/tmp/cutouts_tmp
+export PIXI_CACHE_DIR=/work/cmcc/fp01525/.cache/pixi
+export XDG_CACHE_HOME=/work/cmcc/fp01525/.cache
+
+cd /work/cmcc/fp01525/pypsa-eur
+
+echo "=== job $LSB_JOBID  host $(hostname) ==="
+date
+env | grep -E 'TMPDIR|CACHE|PATH|LSB_' | sort
+which pixi snakemake || true
+df -h "$TMPDIR" "$PIXI_CACHE_DIR" /work/cmcc/fp01525 || true
+ls -lh data/cutout/build/unknown/ 2>/dev/null | head -40 || echo "(no cutouts yet)"
+
+# All 31 cutout targets. Snakemake will skip those whose file already
+# exists (i.e. the 14 prefetched).
+TARGETS=()
+for y in $(seq 1995 2025); do
+    TARGETS+=("data/cutout/build/unknown/europe-${y}-sarah3-era5.nc")
+done
+
+pixi run snakemake --cores 16 \
+    --rerun-incomplete --keep-going --retries 1 \
+    --configfile config/config.macro.italy.yaml \
+    "${TARGETS[@]}"
+
+date
+echo "=== build complete ==="
+ls -lh data/cutout/build/unknown/
+du -sh data/cutout/build/unknown/
