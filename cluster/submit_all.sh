@@ -1,20 +1,20 @@
 #!/bin/bash
-# Submit all 31 weather-year jobs. Run this from a login node.
+# Submit one network-build job per weather year. Run this from a login node.
 #
-# Order of operations for a fresh CASSANDRA setup:
-#   1. bsub < cluster/prefetch_archives.lsf     # ~2-4 h, downloads 14 prebuilt cutouts
-#   2. bsub < cluster/build_cutouts.lsf         # builds the 17 missing via CDS
-#   3. ./cluster/submit_all.sh                  # 31 weather-year jobs
+# Archive mode: cutouts are the pre-built sarah3-era5 files retrieved from
+# data.pypsa.org (or already staged in data/cutout/archive/v1.0/). No cutout
+# build step is needed, so just run the year jobs directly:
+#   ./cluster/submit_all.sh
 #
-# Or chain them automatically (uncomment in step 3):
-#   PREFETCH_ID=$(bsub < cluster/prefetch_archives.lsf | awk '{print $2}' | tr -d '<>')
-#   BUILD_ID=$(bsub -w "done($PREFETCH_ID)" < cluster/build_cutouts.lsf | awk '{print $2}' | tr -d '<>')
-#   ./cluster/submit_all.sh "$BUILD_ID"
+# Optionally throttle concurrency:
+#   MAX_PARALLEL=4 ./cluster/submit_all.sh
 
 set -euo pipefail
 
-# Optional: wait for the cutout-build job to finish before any year-job runs.
-# Pass the cutout-build LSF job ID as argv[1].
+# The 14 weather years pypsa-eur publishes as pre-built sarah3-era5 cutouts.
+YEARS=(1995 1996 2008 2009 2010 2012 2013 2019 2020 2021 2022 2023 2024 2025)
+
+# Optional: make all year-jobs wait for a prior LSF job. Pass its ID as argv[1].
 DEP_OPT=""
 if [[ $# -ge 1 ]]; then
     DEP_OPT="-w done($1)"
@@ -27,7 +27,7 @@ fi
 MAX_PARALLEL=${MAX_PARALLEL:-0}
 
 SUBMITTED=()
-for y in $(seq 1995 2025); do
+for y in "${YEARS[@]}"; do
     JOB_NAME="pypsa-yr${y}"
     THROTTLE=""
     if [[ "$MAX_PARALLEL" -gt 0 ]]; then

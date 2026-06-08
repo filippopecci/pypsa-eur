@@ -44,13 +44,15 @@ env | grep -E 'YR|TMPDIR|CACHE|PATH|LSB_' | sort
 which pixi snakemake || true
 df -h "$TMPDIR" "$PIXI_CACHE_DIR" /work/cmcc/fp01525 || true
 
-# Sanity: the cutout we need must already exist (built by build_cutouts.lsf).
-CUTOUT="data/cutout/build/unknown/europe-${YR}-sarah3-era5.nc"
-if [[ ! -s "$CUTOUT" ]]; then
-    echo "FATAL: $CUTOUT not found. Run prefetch_archives.lsf + build_cutouts.lsf first."
-    exit 3
+# Sanity: the cutout we need must already exist (retrieved from the pypsa-eur
+# archive into data/cutout/archive/v1.0/). If absent, snakemake's retrieve_cutout
+# rule will fetch it from data.pypsa.org automatically (compute nodes have net).
+CUTOUT="data/cutout/archive/v1.0/europe-${YR}-sarah3-era5.nc"
+if [[ -s "$CUTOUT" ]]; then
+    echo "[ok] cutout present: $(du -h "$CUTOUT" | cut -f1)"
+else
+    echo "[info] $CUTOUT not present yet; snakemake will retrieve it."
 fi
-echo "[ok] cutout present: $(du -h "$CUTOUT" | cut -f1)"
 
 # --- run ---
 TARGETS=(
