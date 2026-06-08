@@ -60,9 +60,10 @@ for h in 2025 2030 2035 2040 2045 2050; do
     TARGETS+=("resources/pypsa-macro-italy/yr${YR}/networks/base_s_adm___${h}.nc")
 done
 
-pixi run snakemake --cores 16 \
-    --rerun-incomplete --keep-going --retries 1 \
+pixi run snakemake \
     --configfile config/config.macro.italy.yaml \
+    --cores 16 \
+    --rerun-incomplete --keep-going --retries 1 \
     -- "${TARGETS[@]}"
 
 date

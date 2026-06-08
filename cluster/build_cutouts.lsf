@@ -43,9 +43,10 @@ for y in $(seq 1995 2025); do
     TARGETS+=("data/cutout/build/unknown/europe-${y}-sarah3-era5.nc")
 done
 
-pixi run snakemake --cores 16 \
-    --rerun-incomplete --keep-going --retries 1 \
+pixi run snakemake \
     --configfile config/config.macro.italy.yaml \
+    --cores 16 \
+    --rerun-incomplete --keep-going --retries 1 \
     -- "${TARGETS[@]}"
 
 date
