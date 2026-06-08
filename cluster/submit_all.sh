@@ -21,20 +21,27 @@ if [[ $# -ge 1 ]]; then
     echo "[info] all year-jobs will wait for done($1)"
 fi
 
-# Optional throttling: cap simultaneous running year-jobs to N. Set to 0 to disable.
-# CASSANDRA's p_macro SC will have its own slot limit; this just stops you
-# from queuing more than your fair share at once.
+# Optional throttling: cap simultaneously RUNNING year-jobs to N. Set to 0 to disable.
+# Implemented with an LSF job group (bgadd -L), which is the correct mechanism for
+# limiting concurrency across independent jobs. (numrun()/numpend() in -w only work
+# on job arrays, not name globs.) The SC `macro` application also caps concurrency,
+# so this is mostly for predictability / courtesy when sharing project 0588.
 MAX_PARALLEL=${MAX_PARALLEL:-0}
+JOBGROUP="/fp01525/pypsa-macro"
+GROUP_OPT=""
+if [[ "$MAX_PARALLEL" -gt 0 ]]; then
+    # create the group with the limit, or update the limit if it already exists
+    bgadd -L "$MAX_PARALLEL" "$JOBGROUP" 2>/dev/null \
+        || bgmod -L "$MAX_PARALLEL" "$JOBGROUP"
+    GROUP_OPT="-g $JOBGROUP"
+    echo "[info] job group $JOBGROUP limited to $MAX_PARALLEL concurrent jobs"
+fi
 
 SUBMITTED=()
 for y in "${YEARS[@]}"; do
     JOB_NAME="pypsa-yr${y}"
-    THROTTLE=""
-    if [[ "$MAX_PARALLEL" -gt 0 ]]; then
-        THROTTLE='-w "numrun(pypsa-yr*) < '"$MAX_PARALLEL"'"'
-    fi
-    # Build the bsub line. eval lets us combine DEP_OPT + THROTTLE cleanly.
-    CMD="bsub -J $JOB_NAME -env \"YR=$y\" $DEP_OPT $THROTTLE < cluster/run_year.lsf"
+    # eval lets us combine DEP_OPT + GROUP_OPT cleanly.
+    CMD="bsub -J $JOB_NAME -env \"YR=$y\" $DEP_OPT $GROUP_OPT < cluster/run_year.lsf"
     echo "[submit] $CMD"
     eval $CMD
     SUBMITTED+=("$JOB_NAME")

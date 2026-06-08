@@ -1,0 +1,68 @@
+#!/bin/bash
+# Build ALL pre-optimization networks for the 14 pre-built weather years in a
+# SINGLE snakemake invocation on one exclusive node. snakemake parallelizes the
+# 14 independent per-year DAGs across the node's cores and respects each rule's
+# declared memory (mem_mb) so it won't oversubscribe RAM. One working-directory
+# lock, no cross-job races (run.shared_resources.policy: false -> disjoint
+# per-year outputs; cutouts + data/ already staged).
+#
+# Submit from a login node:
+#   bsub < cluster/run_all.lsf
+
+#BSUB -J pypsa-all
+#BSUB -q p_macro
+#BSUB -P 0588
+#BSUB -n 112
+#BSUB -R "span[hosts=1]"
+#BSUB -x
+#BSUB -W 1440
+#BSUB -o log_all_%J.out
+#BSUB -e log_all_%J.err
+
+set -uo pipefail
+
+# --- env (don't rely on .bashrc being sourced) ---
+export PATH="/users_home/cmcc/fp01525/.pixi/bin:$PATH"
+export TMPDIR=/work/cmcc/fp01525/tmp
+mkdir -p "$TMPDIR"
+export PIXI_CACHE_DIR=/work/cmcc/fp01525/.cache/pixi
+export XDG_CACHE_HOME=/work/cmcc/fp01525/.cache
+
+cd /work/cmcc/fp01525/pypsa-eur
+
+# Detect resources actually available on this (exclusive) node, so we don't
+# hardcode core/memory counts.
+CORES=$(nproc)
+MEM_MB=$(free -m | awk '/^Mem:/{print int($2*0.90)}')   # 90% of node RAM
+
+echo "=== job $LSB_JOBID  host $(hostname)  cores=$CORES  mem_mb=$MEM_MB ==="
+date
+which pixi snakemake || true
+df -h "$TMPDIR" /work/cmcc/fp01525 || true
+
+# 14 pre-built weather years x (6 horizons + brownfield baseline) = 98 targets.
+YEARS=(1995 1996 2008 2009 2010 2012 2013 2019 2020 2021 2022 2023 2024 2025)
+TARGETS=()
+for y in "${YEARS[@]}"; do
+    TARGETS+=("resources/pypsa-macro-italy/yr${y}/networks/base_s_adm___2025_brownfield.nc")
+    for h in 2025 2030 2035 2040 2045 2050; do
+        TARGETS+=("resources/pypsa-macro-italy/yr${y}/networks/base_s_adm___${h}.nc")
+    done
+done
+echo "[info] ${#TARGETS[@]} targets queued"
+
+# --configfile FIRST (it has nargs='+', so anything after it gets slurped); a
+# leading '--' is swallowed by `pixi run`, so we rely on flag-ordering + a single
+# trailing '--' before the positional targets.
+pixi run snakemake \
+    --configfile config/config.macro.italy.yaml \
+    --cores "$CORES" \
+    --resources mem_mb="$MEM_MB" \
+    --rerun-incomplete --keep-going --retries 1 \
+    -- "${TARGETS[@]}"
+rc=$?
+
+date
+echo "=== snakemake exit code: $rc ==="
+echo "completed: $(ls resources/pypsa-macro-italy/yr*/networks/base_s_adm___*.nc 2>/dev/null | wc -l) / 98 target networks"
+exit $rc
