@@ -310,9 +310,34 @@ if __name__ == "__main__":
         fn = snakemake.input.synthetic
         synthetic_load = pd.read_csv(fn, index_col=0, parse_dates=True)
         # UA, MD, XK, CY, MT do not appear in synthetic load data
-        countries = list(set(countries) - set(["UA", "MD", "XK", "CY", "MT"]))
-        synthetic_load = synthetic_load.loc[snapshots, countries]
+        synthetic_countries = list(set(countries) - set(["UA", "MD", "XK", "CY", "MT"]))
+        # The synthetic dataset only spans a limited range of years. Restrict it
+        # to the snapshots it actually covers so that target (weather) years
+        # beyond that range fall back to measured demand instead of raising a
+        # KeyError on the missing timestamps.
+        available = snapshots.intersection(synthetic_load.index)
+        missing = snapshots.difference(synthetic_load.index)
+        if len(missing):
+            logger.info(
+                f"Synthetic load data does not cover {len(missing)} of "
+                f"{len(snapshots)} snapshots; relying on measured demand there."
+            )
+        synthetic_load = synthetic_load.loc[available, synthetic_countries]
         load = load.combine_first(synthetic_load)
+
+    # Kosovo (XK) is absent from the synthetic dataset and only has measured
+    # demand for recent years (ENTSO-E). For weather years outside that range
+    # the column would otherwise be all-NaN, so fall back to a representative
+    # reference year (already gap-filled above) remapped onto the target year.
+    xk_reference_year = "2013"
+    if "XK" in load.columns and load["XK"].reindex(snapshots).isna().any():
+        logger.info(
+            f"Filling missing Kosovo (XK) demand from the {xk_reference_year} "
+            "profile remapped to the target year."
+        )
+        load["XK"] = load["XK"].combine_first(
+            repeat_years(load.loc[xk_reference_year, "XK"], [snapshots[0].year])
+        )
 
     assert not load.isna().any().any(), (
         "Load data contains nans. Adjust the parameters "
