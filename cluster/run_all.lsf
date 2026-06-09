@@ -40,8 +40,11 @@ date
 which pixi snakemake || true
 df -h "$TMPDIR" /work/cmcc/fp01525 || true
 
-# 14 pre-built weather years x (6 horizons + brownfield baseline) = 98 targets.
-YEARS=(1995 1996 2008 2009 2010 2012 2013 2019 2020 2021 2022 2023 2024 2025)
+# 12 weather years x (6 horizons + brownfield baseline) = 84 targets.
+# 2024 and 2025 skipped for now: the HDD dataset (and hence heat_totals) only
+# covers years up to 2023, so build_population_weighted_energy_totals fails for
+# those weather years.
+YEARS=(1995 1996 2008 2009 2010 2012 2013 2019 2020 2021 2022 2023)
 TARGETS=()
 for y in "${YEARS[@]}"; do
     TARGETS+=("resources/pypsa-macro-italy/yr${y}/networks/base_s_adm___2025_brownfield.nc")
@@ -64,5 +67,5 @@ rc=$?
 
 date
 echo "=== snakemake exit code: $rc ==="
-echo "completed: $(ls resources/pypsa-macro-italy/yr*/networks/base_s_adm___*.nc 2>/dev/null | wc -l) / 98 target networks"
+echo "completed: $(ls resources/pypsa-macro-italy/yr*/networks/base_s_adm___*.nc 2>/dev/null | wc -l) / 84 target networks"
 exit $rc
