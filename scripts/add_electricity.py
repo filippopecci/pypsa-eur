@@ -683,8 +683,8 @@ def attach_conventional_generators(
                     df.columns = df.columns.astype(int)
                     year = n.snapshots[0].year
                     values = df[year]
-                except (ValueError, TypeError):
-                    values = df.iloc[:, -1]  # take last column if year selection fails
+                except (ValueError, TypeError, KeyError):
+                    values = df.iloc[:, 0]  # take first (earliest) column if year selection fails
                 bus_values = n.buses.country.map(values)
                 n.generators.update(
                     {attr: n.generators.loc[idx].bus.map(bus_values).dropna()}
