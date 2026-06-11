@@ -47,9 +47,9 @@ df -h "$TMPDIR" /work/cmcc/fp01525 || true
 YEARS=(1995 1996 2008 2009 2010 2012 2013 2019 2020 2021 2022 2023)
 TARGETS=()
 for y in "${YEARS[@]}"; do
-    TARGETS+=("resources/pypsa-macro-italy/yr${y}/networks/base_s_adm___2025_brownfield.nc")
+    TARGETS+=("resources/pypsa-macro-eu/yr${y}/networks/base_s_adm___2025_brownfield.nc")
     for h in 2025 2030 2035 2040 2045 2050; do
-        TARGETS+=("resources/pypsa-macro-italy/yr${y}/networks/base_s_adm___${h}.nc")
+        TARGETS+=("resources/pypsa-macro-eu/yr${y}/networks/base_s_adm___${h}.nc")
     done
 done
 echo "[info] ${#TARGETS[@]} targets queued"
@@ -58,7 +58,7 @@ echo "[info] ${#TARGETS[@]} targets queued"
 # leading '--' is swallowed by `pixi run`, so we rely on flag-ordering + a single
 # trailing '--' before the positional targets.
 pixi run snakemake \
-    --configfile config/config.macro.italy.yaml \
+    --configfile config/config.macro.eu.yaml \
     --cores "$CORES" \
     --resources mem_mb="$MEM_MB" \
     --rerun-incomplete --keep-going --retries 1 \
@@ -67,5 +67,5 @@ rc=$?
 
 date
 echo "=== snakemake exit code: $rc ==="
-echo "completed: $(ls resources/pypsa-macro-italy/yr*/networks/base_s_adm___*.nc 2>/dev/null | wc -l) / 84 target networks"
+echo "completed: $(ls resources/pypsa-macro-eu/yr*/networks/base_s_adm___*.nc 2>/dev/null | wc -l) / 84 target networks"
 exit $rc

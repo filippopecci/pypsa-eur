@@ -1,5 +1,9 @@
 run:
-  name: "pypsa-macro-eu-nuts0"
+  prefix: "pypsa-macro-eu"
+  name: "all"                       # expands to every scenario in the file below
+  scenarios:
+    enable: true
+    file: config/scenarios.macro.weather.yaml
 
 scenario:
   clusters:
@@ -54,15 +58,20 @@ sector:
   electricity_distribution_grid: false # true   #####
   gas_distribution_grid: false # true   #####
 
+# Cutouts are consumed from the pypsa-eur archive (data.cutout.source defaults
+# to "archive" in config.default.yaml -> retrieved from data.pypsa.org into
+# data/cutout/archive/v1.0/). Only the per-scenario default_cutout name is used;
+# no atlite.cutouts build definitions are needed in archive mode.
 atlite:
-  nprocesses: 8
+  nprocesses: 16
+  default_cutout: "europe-2013-sarah3-era5"   # base default; each scenario overrides
 
 solving:
   solver:
     name: highs
     options: highs-default
   options:
-    linearized_unit_commitment: true  
+    linearized_unit_commitment: true
   solver_options:
     gurobi-default:
       threads: 32
