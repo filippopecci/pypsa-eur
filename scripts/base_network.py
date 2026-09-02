@@ -1493,9 +1493,13 @@ def build_admin_shapes(
                 .map(level_map)
             )
 
-        # If GB is in the countries, set the level, aggregate London area to level 1 due to converging issues
+        # If GB is in the countries, aggregate the London area to level 1 due to
+        # converging issues. Only applies where the requested level is finer than
+        # level 1, so that London is not split off from coarser GB regions.
         if "GB" in countries and level != "bz":
-            nuts3_regions.loc[nuts3_regions.level1 == "GBI", "column"] = "level1"
+            b_london = nuts3_regions.level1 == "GBI"
+            b_finer = nuts3_regions["column"].isin(["level2", "level3"])
+            nuts3_regions.loc[b_london & b_finer, "column"] = "level1"
 
         nuts3_regions["admin"] = nuts3_regions.apply(
             lambda row: row[row["column"]], axis=1
