@@ -679,12 +679,16 @@ def attach_conventional_generators(
                 df = pd.read_csv(
                     conventional_inputs[f"conventional_{carrier}_{attr}"], index_col=0
                 )
+                year = n.snapshots[0].year
                 try:
                     df.columns = df.columns.astype(int)
-                    year = n.snapshots[0].year
                     values = df[year]
-                except (ValueError, TypeError, KeyError):
-                    values = df.iloc[:, 0]  # take first (earliest) column if year selection fails
+                except KeyError:
+                    # year not available: use the nearest available year
+                    nearest = min(df.columns, key=lambda c: abs(c - year))
+                    values = df[nearest]
+                except (ValueError, TypeError):
+                    values = df.iloc[:, -1]  # columns aren't years; take last column
                 bus_values = n.buses.country.map(values)
                 n.generators.update(
                     {attr: n.generators.loc[idx].bus.map(bus_values).dropna()}
