@@ -122,10 +122,21 @@ def prepare_dataset(
     df["p_nom_diameter"] = df.diameter_mm.apply(diameter_to_capacity)
     ratio = df.p_nom / df.p_nom_diameter
     not_nordstream = df.max_pressure_bar < 220
+    # Replace ONLY the implausible reported capacities with the diameter-based
+    # estimate; keep the plausible reported values. Upstream commit 46d8ce8f
+    # ("address deprecation warnings") turned the original
+    #   df.p_nom.update(df.p_nom_diameter.where(cond))
+    # into a bare `df["p_nom"] = df.p_nom_diameter.where(cond)`, which is NOT
+    # equivalent: `.update()` skips the NaN entries that `where` produces where
+    # cond is False, so it preserved the good reported capacities; the plain
+    # assignment wrote those NaNs through, wiping every pipe with a plausible
+    # capacity to NaN (later summed to 0 in cluster_gas_network). Passing the
+    # original p_nom as the `other` argument restores the intended behaviour.
     df["p_nom"] = df.p_nom_diameter.where(
         (df.p_nom <= 500)
         | ((ratio > correction_threshold_p_nom) & not_nordstream)
-        | ((ratio < 1 / correction_threshold_p_nom) & not_nordstream)
+        | ((ratio < 1 / correction_threshold_p_nom) & not_nordstream),
+        df.p_nom,
     )
 
     # lines which have way too discrepant line lengths
