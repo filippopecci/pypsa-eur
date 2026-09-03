@@ -7,8 +7,12 @@
 # -> disjoint per-year outputs; cutouts + data/ already staged).
 #
 # Submit from a login node:
+#   bsub                                  < cluster/run_all.lsf   # CASE defaults to eu
 #   bsub -J pypsa-eu    -env "CASE=eu"    < cluster/run_all.lsf
 #   bsub -J pypsa-italy -env "CASE=italy" < cluster/run_all.lsf
+#
+# Note that bsub propagates the submitting shell's environment, so an exported
+# CASE would override the default; pass -env explicitly if in doubt.
 #
 # CASE selects config/config.macro.<CASE>.yaml. Everything else -- output prefix,
 # the weather-year scenario list, planning horizons, clusters wildcard -- is read
