@@ -1,15 +1,30 @@
 #!/bin/bash
-# Build ALL pre-optimization networks for the 14 pre-built weather years in a
-# SINGLE snakemake invocation on one exclusive node. snakemake parallelizes the
-# 14 independent per-year DAGs across the node's cores and respects each rule's
-# declared memory (mem_mb) so it won't oversubscribe RAM. One working-directory
-# lock, no cross-job races (run.shared_resources.policy: false -> disjoint
-# per-year outputs; cutouts + data/ already staged).
+# Build ALL pre-optimization networks for every weather-year scenario of ONE
+# model case, in a SINGLE snakemake invocation on one exclusive node. snakemake
+# parallelizes the independent per-year DAGs across the node's cores and respects
+# each rule's declared memory (mem_mb) so it won't oversubscribe RAM. One
+# working-directory lock, no cross-job races (run.shared_resources.policy: false
+# -> disjoint per-year outputs; cutouts + data/ already staged).
 #
 # Submit from a login node:
-#   bsub < cluster/run_all.lsf
+#   bsub -J pypsa-eu    -env "CASE=eu"    < cluster/run_all.lsf
+#   bsub -J pypsa-italy -env "CASE=italy" < cluster/run_all.lsf
+#
+# CASE selects config/config.macro.<CASE>.yaml. Everything else -- output prefix,
+# the weather-year scenario list, planning horizons, clusters wildcard -- is read
+# out of that config, so adding a new case only means adding a new config file.
+#
+# Optional env overrides:
+#   YEARS="2013 2019"      build only these weather years
+#                          (default: every scenario in the config's scenarios
+#                          file, minus SKIP_YEARS)
+#   SKIP_YEARS="2024 2025" weather years to leave out. Defaults to 2024 and 2025:
+#                          the HDD dataset (and hence heat_totals) only covers
+#                          years up to 2023, so build_population_weighted_energy_totals
+#                          fails for those. Pass SKIP_YEARS="" to attempt them.
+#   DRY_RUN=1              list the targets and run `snakemake -n`, then exit
 
-#BSUB -J pypsa-all
+#BSUB -J pypsa-build
 #BSUB -q p_macro
 #BSUB -P 0588
 #BSUB -n 112
@@ -21,6 +36,9 @@
 
 set -uo pipefail
 
+CASE="${CASE:-eu}"
+CONFIG="config/config.macro.${CASE}.yaml"
+
 # --- env (don't rely on .bashrc being sourced) ---
 export PATH="/users_home/cmcc/fp01525/.pixi/bin:$PATH"
 export TMPDIR=/work/cmcc/fp01525/tmp
@@ -30,35 +48,99 @@ export XDG_CACHE_HOME=/work/cmcc/fp01525/.cache
 
 cd /work/cmcc/fp01525/pypsa-eur
 
+if [[ ! -f "$CONFIG" ]]; then
+    echo "[fatal] no such config: $CONFIG"
+    echo "        available cases:"
+    ls config/config.macro.*.yaml 2>/dev/null | sed 's#.*config.macro.\(.*\)\.yaml#          CASE=\1#'
+    exit 2
+fi
+
 # Detect resources actually available on this (exclusive) node, so we don't
 # hardcode core/memory counts.
 CORES=$(nproc)
 MEM_MB=$(free -m | awk '/^Mem:/{print int($2*0.90)}')   # 90% of node RAM
 
-echo "=== job $LSB_JOBID  host $(hostname)  cores=$CORES  mem_mb=$MEM_MB ==="
+echo "=== job ${LSB_JOBID:-local}  host $(hostname)  case=$CASE  cores=$CORES  mem_mb=$MEM_MB ==="
+echo "=== config: $CONFIG ==="
 date
 which pixi snakemake || true
 df -h "$TMPDIR" /work/cmcc/fp01525 || true
 
-# 12 weather years x (6 horizons + brownfield baseline) = 84 targets.
-# 2024 and 2025 skipped for now: the HDD dataset (and hence heat_totals) only
-# covers years up to 2023, so build_population_weighted_energy_totals fails for
-# those weather years.
-YEARS=(1995 1996 2008 2009 2010 2012 2013 2019 2020 2021 2022 2023)
-TARGETS=()
-for y in "${YEARS[@]}"; do
-    TARGETS+=("resources/pypsa-macro-eu/yr${y}/networks/base_s_adm___2025_brownfield.nc")
-    for h in 2025 2030 2035 2040 2045 2050; do
-        TARGETS+=("resources/pypsa-macro-eu/yr${y}/networks/base_s_adm___${h}.nc")
-    done
-done
-echo "[info] ${#TARGETS[@]} targets queued"
+# --- derive the target list from the config itself ---
+# Targets are the pre-optimization networks: one per planning horizon, plus the
+# base-year brownfield network (add_existing_baseyear constrains the _brownfield
+# wildcard to planning_horizons[0]).
+TARGETS_TXT=$(
+    CONFIG="$CONFIG" \
+    YEARS="${YEARS:-}" \
+    SKIP_YEARS="${SKIP_YEARS-2024 2025}" \
+    pixi run python <<'PY'
+import os, re, sys, yaml
+
+cfg_path = os.environ["CONFIG"]
+cfg = yaml.safe_load(open(cfg_path))
+
+run = cfg["run"]
+prefix = run.get("prefix", "")
+scenarios_cfg = run.get("scenarios", {})
+if not scenarios_cfg.get("enable"):
+    sys.exit(f"[fatal] run.scenarios.enable is not true in {cfg_path}")
+
+scen_file = scenarios_cfg["file"]
+if not os.path.exists(scen_file):
+    sys.exit(f"[fatal] {cfg_path} points at a missing scenarios file: {scen_file}")
+scenarios = list(yaml.safe_load(open(scen_file)))
+
+year_of = lambda name: re.sub(r"\D", "", name)
+
+wanted = os.environ.get("YEARS", "").split()
+if wanted:
+    by_year = {year_of(s): s for s in scenarios}
+    missing = [y for y in wanted if y not in by_year]
+    if missing:
+        sys.exit(f"[fatal] not in {scen_file}: {', '.join(missing)}")
+    names = [by_year[y] for y in wanted]
+else:
+    skip = set(os.environ.get("SKIP_YEARS", "").split())
+    names = [s for s in scenarios if year_of(s) not in skip]
+
+if not names:
+    sys.exit("[fatal] no scenarios selected")
+
+horizons = cfg["scenario"]["planning_horizons"]
+clusters = cfg["scenario"]["clusters"]
+if len(clusters) != 1:
+    sys.exit(f"[fatal] expected exactly one clusters wildcard, got {clusters}")
+c = clusters[0]
+
+print(f"[info] case prefix={prefix}  scenarios={len(names)}  horizons={horizons}",
+      file=sys.stderr)
+for n in names:
+    stem = f"resources/{prefix}/{n}/networks/base_s_{c}__"
+    print(f"{stem}_{horizons[0]}_brownfield.nc")
+    for h in horizons:
+        print(f"{stem}_{h}.nc")
+PY
+) || { echo "[fatal] target generation failed"; exit 2; }
+
+mapfile -t TARGETS < <(grep '^resources/' <<<"$TARGETS_TXT")
+if [[ ${#TARGETS[@]} -eq 0 ]]; then
+    echo "[fatal] no targets produced"
+    exit 2
+fi
+echo "[info] ${#TARGETS[@]} targets queued for case '$CASE'"
+
+if [[ -n "${DRY_RUN:-}" ]]; then
+    printf '  %s\n' "${TARGETS[@]}"
+    pixi run snakemake --configfile "$CONFIG" -n -- "${TARGETS[@]}"
+    exit $?
+fi
 
 # --configfile FIRST (it has nargs='+', so anything after it gets slurped); a
 # leading '--' is swallowed by `pixi run`, so we rely on flag-ordering + a single
 # trailing '--' before the positional targets.
 pixi run snakemake \
-    --configfile config/config.macro.eu.yaml \
+    --configfile "$CONFIG" \
     --cores "$CORES" \
     --resources mem_mb="$MEM_MB" \
     --rerun-incomplete --keep-going --retries 1 \
@@ -67,5 +149,7 @@ rc=$?
 
 date
 echo "=== snakemake exit code: $rc ==="
-echo "completed: $(ls resources/pypsa-macro-eu/yr*/networks/base_s_adm___*.nc 2>/dev/null | wc -l) / 84 target networks"
+BUILT=0
+for t in "${TARGETS[@]}"; do [[ -s "$t" ]] && BUILT=$((BUILT + 1)); done
+echo "completed: $BUILT / ${#TARGETS[@]} target networks for case '$CASE'"
 exit $rc

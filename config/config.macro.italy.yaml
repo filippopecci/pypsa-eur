@@ -3,7 +3,7 @@ run:
   name: "all"                       # expands to every scenario in the file below
   scenarios:
     enable: true
-    file: config/scenarios.macro.italy.yaml
+    file: config/scenarios.macro.weather.yaml
 
 scenario:
   clusters:
