@@ -2907,6 +2907,120 @@
         }
       }
     },
+    "ProfileOnlyConfig": {
+      "description": "Configuration for `profile_only` settings.",
+      "properties": {
+        "enable": {
+          "default": false,
+          "description": "Build the profile-only outputs.",
+          "type": "boolean"
+        },
+        "countries": {
+          "description": "ISO2 codes of the profile-only countries; each becomes one region.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "assign": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Extra EEZ codes merged into a country offshore. {EH: MA} also keeps Western Sahara onshore, which is otherwise clipped from MA at 27\u00b040'N.",
+          "type": "object"
+        },
+        "technologies": {
+          "description": "Renewable technologies to build profiles for.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "renewable": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "description": "Overrides of `renewable` for these countries only, keyed the same way, e.g. {onwind: {resource_classes: 4}}.",
+          "type": "object"
+        },
+        "cutout": {
+          "description": "Configuration for `profile_only.cutout` settings.",
+          "properties": {
+            "rename": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "String replacements turning each main-workflow cutout name into its profile-only counterpart (same year). For ERA5 only, add `sarah3-era5: era5`.",
+              "type": "object"
+            },
+            "module": {
+              "description": "atlite modules of the profile-only cutouts; must agree with the cutout name ('sarah3' or not).",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "sarah_dir": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Directory with SARAH-3 SIS and SID 30-min instantaneous files, which atlite cannot download. Required when `module` includes 'sarah'."
+            },
+            "x": {
+              "description": "Longitude range of the cutout, on the 0.3 degree lattice of the pre-built European cutouts.",
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "y": {
+              "description": "Latitude range of the cutout, on the 0.3 degree lattice of the pre-built European cutouts.",
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "dx": {
+              "default": 0.3,
+              "description": "Longitude resolution of the cutout.",
+              "type": "number"
+            },
+            "dy": {
+              "default": 0.3,
+              "description": "Latitude resolution of the cutout.",
+              "type": "number"
+            },
+            "prepare_kwargs": {
+              "additionalProperties": true,
+              "description": "Keyword arguments passed to `atlite.Cutout.prepare`.",
+              "type": "object"
+            }
+          }
+        },
+        "gebco_url": {
+          "default": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2014/30_second_grid/GEBCO_2014_2D.nc",
+          "description": "Global GEBCO_2014 30 arc-second grid (the European archive copy stops at 32N).",
+          "type": "string"
+        },
+        "cooling_demand": {
+          "description": "Configuration for `profile_only.cooling_demand` settings.",
+          "properties": {
+            "threshold": {
+              "default": 23.0,
+              "description": "Daily mean ambient temperature (degC) above which cooling degree days accrue.",
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
     "PypsaEurConfig": {
       "description": "Configuration for `pypsa_eur` settings.",
       "properties": {
@@ -3021,9 +3135,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 3,
@@ -3157,9 +3281,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 2,
@@ -3340,9 +3474,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 2,
@@ -3523,9 +3667,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 2,
@@ -3713,9 +3867,19 @@
               }
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 5.1,
@@ -3837,9 +4001,19 @@
               }
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 5.1,
@@ -7026,9 +7200,19 @@
           ]
         },
         "resource_classes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            }
+          ],
           "default": 1,
-          "description": "Number of resource classes per clustered region.",
-          "type": "integer"
+          "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
         },
         "capacity_per_sqkm": {
           "default": 2,
@@ -7209,9 +7393,19 @@
           ]
         },
         "resource_classes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            }
+          ],
           "default": 1,
-          "description": "Number of resource classes per clustered region.",
-          "type": "integer"
+          "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
         },
         "capacity_per_sqkm": {
           "default": 3,
@@ -7425,6 +7619,76 @@
           ],
           "default": null,
           "description": "Path to a temporary directory where intermediate files are stored when building the cutout. Helpful when building large cutouts."
+        }
+      }
+    },
+    "_ProfileOnlyCoolingDemandConfig": {
+      "description": "Configuration for `profile_only.cooling_demand` settings.",
+      "properties": {
+        "threshold": {
+          "default": 23.0,
+          "description": "Daily mean ambient temperature (degC) above which cooling degree days accrue.",
+          "type": "number"
+        }
+      }
+    },
+    "_ProfileOnlyCutoutConfig": {
+      "description": "Configuration for `profile_only.cutout` settings.",
+      "properties": {
+        "rename": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "String replacements turning each main-workflow cutout name into its profile-only counterpart (same year). For ERA5 only, add `sarah3-era5: era5`.",
+          "type": "object"
+        },
+        "module": {
+          "description": "atlite modules of the profile-only cutouts; must agree with the cutout name ('sarah3' or not).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sarah_dir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Directory with SARAH-3 SIS and SID 30-min instantaneous files, which atlite cannot download. Required when `module` includes 'sarah'."
+        },
+        "x": {
+          "description": "Longitude range of the cutout, on the 0.3 degree lattice of the pre-built European cutouts.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "y": {
+          "description": "Latitude range of the cutout, on the 0.3 degree lattice of the pre-built European cutouts.",
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "dx": {
+          "default": 0.3,
+          "description": "Longitude resolution of the cutout.",
+          "type": "number"
+        },
+        "dy": {
+          "default": 0.3,
+          "description": "Latitude resolution of the cutout.",
+          "type": "number"
+        },
+        "prepare_kwargs": {
+          "additionalProperties": true,
+          "description": "Keyword arguments passed to `atlite.Cutout.prepare`.",
+          "type": "object"
         }
       }
     },
@@ -7659,9 +7923,19 @@
           }
         },
         "resource_classes": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            }
+          ],
           "default": 1,
-          "description": "Number of resource classes per clustered region.",
-          "type": "integer"
+          "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
         },
         "capacity_per_sqkm": {
           "default": 5.1,
@@ -9056,9 +9330,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 3,
@@ -9192,9 +9476,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 2,
@@ -9375,9 +9669,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 2,
@@ -9558,9 +9862,19 @@
               ]
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 2,
@@ -9748,9 +10062,19 @@
               }
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 5.1,
@@ -9872,9 +10196,19 @@
               }
             },
             "resource_classes": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "type": "object"
+                }
+              ],
               "default": 1,
-              "description": "Number of resource classes per clustered region.",
-              "type": "integer"
+              "description": "Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}."
             },
             "capacity_per_sqkm": {
               "default": 5.1,
@@ -13849,6 +14183,120 @@
               "default": "https://github.com/PyPSA/pypsa-eur",
               "description": "Website URL for the project using the Overpass API.",
               "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "profile_only": {
+      "description": "Configuration for `profile_only` settings.",
+      "properties": {
+        "enable": {
+          "default": false,
+          "description": "Build the profile-only outputs.",
+          "type": "boolean"
+        },
+        "countries": {
+          "description": "ISO2 codes of the profile-only countries; each becomes one region.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "assign": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Extra EEZ codes merged into a country offshore. {EH: MA} also keeps Western Sahara onshore, which is otherwise clipped from MA at 27\u00b040'N.",
+          "type": "object"
+        },
+        "technologies": {
+          "description": "Renewable technologies to build profiles for.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "renewable": {
+          "additionalProperties": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "description": "Overrides of `renewable` for these countries only, keyed the same way, e.g. {onwind: {resource_classes: 4}}.",
+          "type": "object"
+        },
+        "cutout": {
+          "description": "Configuration for `profile_only.cutout` settings.",
+          "properties": {
+            "rename": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "String replacements turning each main-workflow cutout name into its profile-only counterpart (same year). For ERA5 only, add `sarah3-era5: era5`.",
+              "type": "object"
+            },
+            "module": {
+              "description": "atlite modules of the profile-only cutouts; must agree with the cutout name ('sarah3' or not).",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "sarah_dir": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "description": "Directory with SARAH-3 SIS and SID 30-min instantaneous files, which atlite cannot download. Required when `module` includes 'sarah'."
+            },
+            "x": {
+              "description": "Longitude range of the cutout, on the 0.3 degree lattice of the pre-built European cutouts.",
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "y": {
+              "description": "Latitude range of the cutout, on the 0.3 degree lattice of the pre-built European cutouts.",
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "dx": {
+              "default": 0.3,
+              "description": "Longitude resolution of the cutout.",
+              "type": "number"
+            },
+            "dy": {
+              "default": 0.3,
+              "description": "Latitude resolution of the cutout.",
+              "type": "number"
+            },
+            "prepare_kwargs": {
+              "additionalProperties": true,
+              "description": "Keyword arguments passed to `atlite.Cutout.prepare`.",
+              "type": "object"
+            }
+          }
+        },
+        "gebco_url": {
+          "default": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2014/30_second_grid/GEBCO_2014_2D.nc",
+          "description": "Global GEBCO_2014 30 arc-second grid (the European archive copy stops at 32N).",
+          "type": "string"
+        },
+        "cooling_demand": {
+          "description": "Configuration for `profile_only.cooling_demand` settings.",
+          "properties": {
+            "threshold": {
+              "default": 23.0,
+              "description": "Daily mean ambient temperature (degC) above which cooling degree days accrue.",
+              "type": "number"
             }
           }
         }

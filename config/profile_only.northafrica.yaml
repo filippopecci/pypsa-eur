@@ -1,0 +1,15 @@
+# Overlay on config.macro.eu.yaml: North African profiles for the same weather-year scenarios.
+# Outputs go to resources/pypsa-macro-eu/<scenario>/profile_only/; the European DAG is unchanged.
+profile_only:
+  enable: true
+  cutout:
+    # SARAH-3 SIS + SID, 30-min instantaneous files (SISin*.nc, SIDin*.nc) covering the cutout box.
+    sarah_dir: /work/cmcc/fp01525/data/sarah3
+    # ERA5-only instead (solar then differs from the European sarah3-era5 cutouts):
+    # module: ['era5']
+    # rename: {europe: northafrica, sarah3-era5: era5}
+  # Resource classes for these countries only (Europe keeps renewable.<tech>.resource_classes):
+  # renewable:
+  #   onwind: {resource_classes: 4}
+  #   solar: {resource_classes: 4}
+  #   solar-hsat: {resource_classes: 4}

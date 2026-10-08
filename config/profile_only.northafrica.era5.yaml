@@ -1,0 +1,6 @@
+# ERA5-only shake-out, applied after profile_only.northafrica.yaml: no SARAH-3 needed.
+# North African solar then differs from the European sarah3-era5 cutouts, so don't use these profiles for results.
+profile_only:
+  cutout:
+    module: ['era5']
+    rename: {europe: northafrica, sarah3-era5: era5}

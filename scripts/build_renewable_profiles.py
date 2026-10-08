@@ -110,6 +110,27 @@ from scripts.build_shapes import _simplify_polys
 logger = logging.getLogger(__name__)
 
 
+def resource_classes_by_bus(setting, buses):
+    """
+    Number of resource classes per bus from ``resource_classes``.
+
+    An integer applies to every bus. A mapping is looked up by bus name, then by country
+    (the first two characters of the bus name), then ``default`` (1 if absent).
+    """
+    if not isinstance(setting, dict):
+        nbins = pd.Series(int(setting), index=buses)
+    else:
+        default = setting.get("default", 1)
+        nbins = pd.Series(
+            [setting.get(bus, setting.get(bus[:2], default)) for bus in buses],
+            index=buses,
+            dtype=int,
+        )
+    if (nbins < 1).any():
+        raise ValueError(f"resource_classes must be at least 1, got {setting}.")
+    return nbins
+
+
 if __name__ == "__main__":
     if "snakemake" not in globals():
         from scripts._helpers import mock_snakemake
@@ -188,14 +209,18 @@ if __name__ == "__main__":
         f"Completed average capacity factor calculation per grid cell for technology {technology} ({duration:2.2f}s)"
     )
 
-    nbins = params.get("resource_classes", 1)
-    logger.info(
-        f"Create masks for {nbins} resource classes for technology {technology}..."
-    )
-    start = time.time()
-
     fn = snakemake.input.resource_regions
     resource_regions = gpd.read_file(fn).set_index("name").rename_axis("bus").geometry
+
+    nbins_by_bus = resource_classes_by_bus(
+        params.get("resource_classes", 1), resource_regions.index
+    )
+    nbins = int(nbins_by_bus.max()) if len(nbins_by_bus) else 1
+    logger.info(
+        f"Create masks for {nbins_by_bus.value_counts().to_dict()} (classes: buses) "
+        f"for technology {technology}..."
+    )
+    start = time.time()
 
     # indicator matrix for which cells touch which regions
     kwargs = dict(nprocesses=nprocesses, disable_progressbar=noprogress)
@@ -208,8 +233,14 @@ if __name__ == "__main__":
         cf_by_bus.min(dim=["x", "y"]) - epsilon,
         cf_by_bus.max(dim=["x", "y"]) + epsilon,
     )
-    normed_bins = xr.DataArray(np.linspace(0, 1, nbins + 1), dims=["bin"])
-    bins = cf_min + (cf_max - cf_min) * normed_bins
+    if nbins_by_bus.nunique() <= 1:
+        normed_bins = xr.DataArray(np.linspace(0, 1, nbins + 1), dims=["bin"])
+    else:
+        # Bus-specific edges; the classes beyond a bus's own count stay empty.
+        k = xr.DataArray(nbins_by_bus, dims=["bus"])
+        j = xr.DataArray(np.arange(nbins + 1), dims=["bin"])
+        normed_bins = (j / k).where(j <= k, np.inf)
+    bins = (cf_min + (cf_max - cf_min) * normed_bins).transpose("bus", "bin")
 
     cf_by_bus_bin = cf_by_bus.expand_dims(bin=range(nbins))
     lower_edges = bins[:, :-1]

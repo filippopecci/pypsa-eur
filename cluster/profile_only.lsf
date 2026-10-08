@@ -1,0 +1,78 @@
+#!/bin/bash
+# The North African profile_only files macro-med's NorthAfrica module reads, for ONE weather year:
+# profile_<tech>.nc and regions_by_class_<tech>.geojson for 6 techs, shapes_adm1.geojson, powerplants.csv.
+# It downloads ERA5, OSM admin-1, WorldPop, GEBCO_2014 and the GEM trackers, so the node needs internet and ~/.cdsapirc.
+#
+# Submit from a login node, in /work/cmcc/fp01525/pypsa-eur:
+#   DRY_RUN=1 bash cluster/profile_only.lsf                        # list the jobs, run nothing
+#   bsub < cluster/profile_only.lsf                                # yr2013, ERA5 only
+#   bsub -env "YEAR=2013, ERA5_ONLY=0" < cluster/profile_only.lsf  # SARAH-3 from profile_only.cutout.sarah_dir
+
+#BSUB -J na-profiles
+#BSUB -q p_macro
+#BSUB -P 0588
+#BSUB -n 112
+#BSUB -R "span[hosts=1]"
+#BSUB -x
+#BSUB -W 1440
+#BSUB -o log_na_profiles_%J.out
+#BSUB -e log_na_profiles_%J.err
+
+set -uo pipefail
+
+YEAR="${YEAR:-2013}"
+ERA5_ONLY="${ERA5_ONLY:-1}"
+CONFIGS=(config/config.macro.eu.yaml config/profile_only.northafrica.yaml)
+[[ "$ERA5_ONLY" == 1 ]] && CONFIGS+=(config/profile_only.northafrica.era5.yaml)
+
+# --- env (don't rely on .bashrc being sourced) ---
+export PATH="/users_home/cmcc/fp01525/.pixi/bin:$PATH"
+export TMPDIR=/work/cmcc/fp01525/tmp
+mkdir -p "$TMPDIR"
+export PIXI_CACHE_DIR=/work/cmcc/fp01525/.cache/pixi
+export XDG_CACHE_HOME=/work/cmcc/fp01525/.cache
+
+cd /work/cmcc/fp01525/pypsa-eur
+
+TECHS=(onwind solar solar-hsat offwind-ac offwind-dc offwind-float)
+OUT="resources/pypsa-macro-eu/yr${YEAR}/profile_only"
+TARGETS=("$OUT/shapes_adm1.geojson" "$OUT/powerplants.csv")
+for t in "${TECHS[@]}"; do TARGETS+=("$OUT/profile_${t}.nc"); done
+
+echo "=== job ${LSB_JOBID:-local}  host $(hostname)  yr${YEAR}  ERA5_ONLY=${ERA5_ONLY} ==="
+echo "=== configs: ${CONFIGS[*]} ==="
+date
+
+# --configfile FIRST (nargs='+'), then a single trailing '--' before the targets; see run_all.lsf.
+if [[ -n "${DRY_RUN:-}" ]]; then
+    pixi run snakemake --configfile "${CONFIGS[@]}" -n -- "${TARGETS[@]}"
+    exit $?
+fi
+
+# Fail in seconds, not after the queue wait, if this node can't reach the download hosts.
+for url in https://cds.climate.copernicus.eu https://overpass-api.de/api/status \
+           https://dap.ceda.ac.uk https://data.worldpop.org; do
+    curl -s -o /dev/null -m 20 "$url" || { echo "[fatal] $(hostname) cannot reach $url"; exit 3; }
+done
+[[ -s "$HOME/.cdsapirc" ]] || { echo "[fatal] $HOME/.cdsapirc is missing or empty"; exit 3; }
+
+CORES=$(nproc)
+MEM_MB=$(free -m | awk '/^Mem:/{print int($2*0.90)}')   # 90% of node RAM
+
+pixi run snakemake \
+    --configfile "${CONFIGS[@]}" \
+    --cores "$CORES" \
+    --resources mem_mb="$MEM_MB" \
+    --rerun-incomplete --keep-going --retries 1 \
+    -- "${TARGETS[@]}"
+rc=$?
+
+date
+echo "=== snakemake exit code: $rc ==="
+MISSING=0
+for f in "${TARGETS[@]}" "${TECHS[@]/#/$OUT/regions_by_class_}"; do
+    [[ "$f" == */regions_by_class_* ]] && f="$f.geojson"
+    if [[ -s "$f" ]]; then echo "  ok      $f"; else echo "  MISSING $f"; MISSING=$((MISSING + 1)); fi
+done
+echo "missing: $MISSING of $(( ${#TARGETS[@]} + ${#TECHS[@]} ))"
+exit $rc

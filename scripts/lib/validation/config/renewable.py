@@ -76,8 +76,9 @@ class _OnwindConfig(BaseModel):
         default_factory=lambda: _WindResourceConfig(turbine="Vestas_V112_3MW"),
         description="Wind resource configuration.",
     )
-    resource_classes: int = Field(
-        1, description="Number of resource classes per clustered region."
+    resource_classes: int | dict[str, int] = Field(
+        1,
+        description="Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}.",
     )
     capacity_per_sqkm: float = Field(
         3, description="Allowable density of wind turbine placement."
@@ -141,8 +142,9 @@ class _OffwindConfig(BaseModel):
         ),
         description="Wind resource configuration.",
     )
-    resource_classes: int = Field(
-        1, description="Number of resource classes per clustered region."
+    resource_classes: int | dict[str, int] = Field(
+        1,
+        description="Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}.",
     )
     capacity_per_sqkm: float = Field(
         2, description="Allowable density of wind turbine placement."
@@ -202,8 +204,9 @@ class _SolarConfig(BaseModel):
         default_factory=_SolarResourceConfig,
         description="Solar resource configuration.",
     )
-    resource_classes: int = Field(
-        1, description="Number of resource classes per clustered region."
+    resource_classes: int | dict[str, int] = Field(
+        1,
+        description="Number of resource classes per clustered region. A mapping sets it per region name or country code, with `default` for the rest, e.g. {default: 1, IT: 3}.",
     )
     capacity_per_sqkm: float = Field(
         5.1, description="Allowable density of solar panel placement."

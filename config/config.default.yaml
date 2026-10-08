@@ -1464,3 +1464,42 @@ overpass_api:
     project_name: "PyPSA-Eur"
     email: "contact@pypsa.org"
     website: "https://github.com/PyPSA/pypsa-eur"
+
+# docs in https://pypsa-eur.readthedocs.io/en/latest/configuration.html#profile_only
+profile_only:
+  enable: false
+  countries:
+  - MA
+  - DZ
+  - TN
+  - LY
+  - EG
+  assign: {}
+  technologies:
+  - onwind
+  - solar
+  - "solar-hsat"
+  - "offwind-ac"
+  - "offwind-dc"
+  - "offwind-float"
+  renewable: {}
+  cutout:
+    rename:
+      europe: northafrica
+    module:
+    - sarah
+    - era5
+    sarah_dir:
+    x:
+    - -18.0
+    - 38.4
+    'y':
+    - 18.0
+    - 39.6
+    dx: 0.3
+    dy: 0.3
+    prepare_kwargs:
+      monthly_requests: true
+  gebco_url: "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2014/30_second_grid/GEBCO_2014_2D.nc"
+  cooling_demand:
+    threshold: 23.0
