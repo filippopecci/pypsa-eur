@@ -255,7 +255,9 @@ def build_nodal_distribution_key(
     keys["population"] = pop.total / pop.country.map(ct_total)
 
     for sector, country in product(sectors, countries):
-        regions_ct = regions.index[regions.index.str.contains(country)]
+        # Match the country prefix: a substring match lets a later country overwrite another's region
+        # (SI takes the bidding zone ITSI, EE takes NUTS DEE).
+        regions_ct = regions.index[regions.index.str[:2] == country]
 
         facilities = hotmaps.query("country == @country and Subsector == @sector")
 
@@ -285,7 +287,7 @@ def build_nodal_distribution_key(
 
     # add cement distribution from GEM
     for country in countries:
-        regions_ct = regions.index[regions.index.str.contains(country)]
+        regions_ct = regions.index[regions.index.str[:2] == country]
 
         status_list = ["operating", "operating pre-retirement", "construction"]
         facilities = cement.query(
@@ -338,7 +340,7 @@ def build_nodal_distribution_key(
     # add specific steel subsectors from GEM
     steel_processes = ["EAF", "DRI + EAF", "Integrated steelworks"]
     for process, country in product(steel_processes, countries):
-        regions_ct = regions.index[regions.index.str.contains(country)]
+        regions_ct = regions.index[regions.index.str[:2] == country]
 
         facilities = steel.query("country == @country")
 
@@ -422,7 +424,7 @@ def build_nodal_distribution_key(
 
     # add ammonia
     for country in countries:
-        regions_ct = regions.index[regions.index.str.contains(country)]
+        regions_ct = regions.index[regions.index.str[:2] == country]
 
         facilities = ammonia.query("country == @country")
 
